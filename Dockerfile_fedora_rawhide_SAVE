@@ -1,0 +1,79 @@
+FROM fedora:rawhide
+
+ENV container docker
+
+RUN dnf -y update \
+  && dnf --allowerasing install systemd systemd-libs dbus \
+  && dnf clean all
+
+RUN systemctl mask dev-mqueue.mount dev-hugepages.mount \
+    systemd-remount-fs.service sys-kernel-config.mount \
+    sys-kernel-debug.mount sys-fs-fuse-connections.mount \
+    display-manager.service graphical.target systemd-logind.service
+
+ADD dbus.service /etc/systemd/system/dbus.service
+RUN systemctl enable dbus.service
+
+
+# for debugging
+RUN dnf -y update && dnf install -y procps-ng && dnf clean all
+
+ENV DOCKER_VERSION 1.8.1
+RUN curl -SL -o /usr/local/bin/docker https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION \
+  && chmod +x /usr/local/bin/docker
+  
+#RUN dnf -y update && dnf -y install docker && dnf clean all
+# RUN yum -y update && yum -y --enablerepo=centosplus install docker && yum clean all
+# RUN curl -SL -o /usr/local/bin/docker https://get.docker.com/builds/Linux/x86_64/docker-1.8.1 \
+#  && chmod +x /usr/local/bin/docker
+
+ADD ./wrapdocker /usr/local/bin/wrapdocker
+RUN chmod +x /usr/local/bin/wrapdocker
+
+#VOLUME /var/lib/docker
+
+#VOLUME ["/sys/fs/cgroup"]
+#VOLUME ["/run"]
+# CMD ["/usr/lib/systemd/systemd"]
+
+
+#RUN curl -SOL https://github.com/coreos/fleet/releases/download/v0.11.5/fleet-v0.11.5-linux-amd64.tar.gz
+#RUN tar -xf fleet-v0.11.5-linux-amd64.tar.gz
+#RUN cp fleet-v0.11.5-linux-amd64/* /usr/bin/
+
+RUN dnf install -y fleet
+
+
+# https://vpavlin.eu/2015/02/fedora-docker-and-systemd/
+VOLUME ["/run", "/tmp"]
+
+RUN cp /usr/lib/systemd/system/dbus.service /etc/systemd/system/; sed -i 's/OOMScoreAdjust=-900//' /etc/systemd/system/dbus.service
+
+RUN dnf -y install etcd
+
+COPY fleet.service /etc/systemd/system/
+COPY fleet.socket /etc/systemd/system/
+
+COPY docker-storage /etc/sysconfig/
+
+RUN systemctl enable docker.service
+RUN systemctl enable etcd.service
+RUN systemctl enable fleet.service
+
+ENV FLEET_VERSION v0.11.5
+#ENV FLEET_VERSION v0.11.1
+
+RUN curl -SOL https://github.com/coreos/fleet/releases/download/$FLEET_VERSION/fleet-$FLEET_VERSION-linux-amd64.tar.gz
+RUN tar -xf fleet-$FLEET_VERSION-linux-amd64.tar.gz
+RUN cp fleet-$FLEET_VERSION-linux-amd64/* /usr/bin/
+
+#curl -L  https://github.com/coreos/etcd/releases/download/v2.1.2/etcd-v2.1.2-linux-amd64.tar.gz -o etcd-v2.1.2-linux-amd64.tar.gz
+#tar xzvf etcd-v2.1.2-linux-amd64.tar.gz
+#cd etcd-v2.1.2-linux-amd64
+#./etcd
+
+CMD ["wrapdocker"]
+
+# docker build -f Dockerfile_fedora_rawhide --rm -t local/systemd-docker-rawhide .
+# docker run --privileged -d -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v $PWD:/units local/systemd-docker-rawhide
+# docker exec -ti [..] bash
