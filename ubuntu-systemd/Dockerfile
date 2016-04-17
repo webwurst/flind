@@ -17,6 +17,12 @@ RUN apt-get update && apt-get install -y systemd-services dbus fleet docker.io \
 	iputils-ping curl jq
 # COPY ./certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
+# because of bug https://bugs.launchpad.net/ubuntu/+source/fleet/+bug/1568902
+RUN curl -SL https://github.com/coreos/fleet/releases/download/v0.11.7/fleet-v0.11.7-linux-amd64.tar.gz \
+	  | tar -xz -C /tmp --strip-components 1 \
+	&& cp tmp/fleetd /usr/sbin/fleetd \
+	&& rm /tmp/*
+
 RUN ( \
 		cd /lib/systemd/system/sysinit.target.wants/; \
 		for i in *; do \
@@ -40,6 +46,8 @@ RUN ( \
 # COPY start-etcd.sh /usr/local/bin/
 COPY setup-network-environment.service /lib/systemd/system/
 COPY etcd.service /lib/systemd/system/
+
+RUN rm /etc/machine-id /var/lib/dbus/machine-id
 
 # systemd needs a different stop signal
 STOPSIGNAL SIGRTMIN+3
