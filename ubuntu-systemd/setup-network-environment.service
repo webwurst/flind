@@ -1,0 +1,10 @@
+[Unit]
+Description=Sets `DEFAULT_IPV4` in `/etc/network-environment`
+#Documentation=https://github.com/kelseyhightower/setup-network-environment
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/bin/sh -c "/bin/echo DEFAULT_IPV4=$(hostname -i) > /etc/network-environment"
+RemainAfterExit=yes
+Type=oneshot
