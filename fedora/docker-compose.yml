@@ -1,0 +1,28 @@
+version: "2"
+
+services:
+
+  # set -x ETCD_DISCOVERY (curl -fsS "https://discovery.etcd.io/new?size=3")
+  # echo $ETCD_DISCOVERY
+
+# --security-opt seccomp:/path/to/systemd-seccomp.json
+
+  fleet:
+    build: .
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
+    tmpfs:
+      - /run
+      - /tmp
+    environment:
+      - ETCD_DISCOVERY
+    tty: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      # - ./fleet-v0.11.7-linux-amd64/fleetd:/usr/sbin/fleetd
+
+  # registry:
+
+  # fleet2:
+  #   build: .

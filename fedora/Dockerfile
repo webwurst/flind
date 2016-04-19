@@ -1,0 +1,70 @@
+FROM fedora:23
+
+ENV container docker
+
+# RUN apt-get update && apt-get install -y systemd-services dbus fleet docker.io \
+#   iputils-ping curl jq
+
+RUN dnf -y update && dnf -y install openssh-server sudo iproute \
+  && dnf clean all
+
+# COPY ..
+
+RUN ( \
+    cd /lib/systemd/system/sysinit.target.wants/; \
+    for i in *; do \
+      if [ "$i" != "systemd-tmpfiles-setup.service" ]; then \
+        rm -f $i; \
+      fi \
+    done \
+    ) \
+    && rm -f /lib/systemd/system/multi-user.target.wants/* \
+    && rm -f /etc/systemd/system/*.wants/* \
+    && rm -f /lib/systemd/system/local-fs.target.wants/* \
+    && rm -f /lib/systemd/system/sockets.target.wants/*udev* \
+    && rm -f /lib/systemd/system/sockets.target.wants/*initctl* \
+    && rm -f /lib/systemd/system/anaconda.target.wants/* \
+    && rm -f /lib/systemd/system/basic.target.wants/* \
+    && rm -f /lib/systemd/system/graphical.target.wants/* \
+		&& rm -f /lib/systemd/system/anaconda.target.wants/* \
+    && ln -vf /lib/systemd/system/multi-user.target /lib/systemd/system/default.target
+
+# add user core
+RUN useradd -m -G wheel -s /bin/bash core \
+  && echo core:coreos | chpasswd \
+  && echo "%sudo ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/core \
+  && echo "core ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/core
+
+# add user etcd
+RUN useradd -m -s /usr/bin/nologin -d /var/lib/etcd2 etcd
+
+# "install" etcd and fleet binaries
+COPY etcd-v2.3.1-linux-amd64/etcd /usr/bin/
+COPY etcd-v2.3.1-linux-amd64/etcdctl /usr/bin/
+COPY fleet-v0.11.7-linux-amd64/fleetd /usr/bin/
+COPY fleet-v0.11.7-linux-amd64/fleetctl /usr/bin/
+
+RUN chmod u+x /usr/bin/*
+
+COPY units/* /usr/bin/
+
+ADD setup-env-files.service /etc/systemd/system/setup-env-files.service
+ADD setup-env-files /usr/sbin/setup-env-files
+# ADD etcd2.service /etc/systemd/system/etcd2.service
+# ADD fleet.service /etc/systemd/system/fleet.service
+# ADD fleet.socket /etc/systemd/system/fleet.socket
+# ADD nomi /home/core/nomi
+# RUN chmod +x /home/core/nomi
+
+# RUN systemctl enable sshd.service
+# RUN systemctl enable setup-env-files.service
+# RUN systemctl enable etcd2.service
+# RUN systemctl enable fleet.service
+RUN systemctl enable \
+  sshd.service etcd2.service fleet.service \
+  setup-env-files.service
+
+RUN rm /etc/machine-id || true
+
+VOLUME [ "/sys/fs/cgroup" ]
+CMD ["/usr/sbin/init"]
