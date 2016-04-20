@@ -20,6 +20,8 @@ services:
     tty: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ~/.ssh/id_rsa.pub:/home/core/.ssh/authorized_keys
+      - ./testing:/testing
       # - ./fleet-v0.11.7-linux-amd64/fleetd:/usr/sbin/fleetd
 
   # registry:
