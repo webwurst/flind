@@ -1,16 +1,12 @@
 # Fleet in Docker
 
+See [`from-scratch.sh`](https://github.com/webwurst/flind/blob/master/from-scratch.sh) how to start up.
+
 ```bash
-docker-compose build
-
-ETCD_DISCOVERY=$(curl -fsS "https://discovery.etcd.io/new?size=3")
-echo "$ETCD_DISCOVERY"
-
-docker-compose up -d
-docker-compose scale fleet=5
+./from-scratch.sh
 
 docker exec flind_fleet_1 etcdctl member list
-docker exec flind_fleet_1 fleetctl list-machines
 
+docker exec flind_fleet_1 fleetctl list-machines
 docker exec flind_fleet_1 fleetctl list-units
 ```
