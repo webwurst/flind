@@ -16,5 +16,9 @@ FLEET_ETCD_SERVERS=http://${ipaddr}:2379
 FLEET_METADATA=${fleet_metadata}
 EOF
 
+cat > /etc/environment <<EOF
+COREOS_PRIVATE_IPV4=${ipaddr}
+EOF
+
 rm /etc/nologin || true
 rm /var/run/nologin || true

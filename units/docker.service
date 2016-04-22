@@ -9,7 +9,14 @@ Type=notify
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
-ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay
+
+# FIXME registry is hardcoded as a workaround for bug with `daemon.json`, it seems
+# ExecStart=/usr/bin/docker daemon -H fd://
+
+ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay --registry-mirror="http://registry-proxy:5000"
+
+# ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay --insecure-registry "http://registry-proxy:5000"
+
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576

@@ -1,0 +1,4 @@
+{
+    "storage-driver": "overlay",
+    "registry-mirror": "http://registry-proxy:5000"
+}
