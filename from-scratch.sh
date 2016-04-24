@@ -15,7 +15,8 @@ sleep 1
 docker exec -ti flind_fleet_1 fleetctl list-machines
 
 docker exec -ti flind_fleet_1 docker info
-docker exec -ti flind_fleet_1 docker run alpine env
+docker exec -ti flind_fleet_1 docker run alpine echo "pong from within alpine"
 docker exec -ti flind_fleet_1 curl http://registry-proxy:5000/v2/
 
 # docker exec -ti flind_fleet_1 bash
+# docker exec -ti flind_fleet_1 /examples/inago/k8s/start-kubernetes.sh

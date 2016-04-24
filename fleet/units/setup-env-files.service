@@ -1,0 +1,13 @@
+[Unit]
+Description=setup env files
+Wants=sshd.service
+After=sshd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/setup-env-files
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

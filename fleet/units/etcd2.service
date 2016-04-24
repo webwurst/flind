@@ -1,0 +1,19 @@
+[Unit]
+Description=etcd2
+Wants=setup-env-files.service
+After=setup-env-files.service
+
+[Service]
+User=etcd
+EnvironmentFile=/etc/fleet-cluster-env
+Environment=ETCD_DATA_DIR=/var/lib/etcd2
+Environment=ETCD_NAME=%m
+# PassEnvironment=ETCD_DISCOVERY
+Nice=-15
+ExecStart=/usr/bin/etcd
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+
+[Install]
+WantedBy=multi-user.target

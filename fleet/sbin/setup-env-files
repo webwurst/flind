@@ -1,0 +1,24 @@
+#!/bin/sh
+
+ipaddr=$(/usr/sbin/ip r get 8.8.8.8 | /usr/bin/awk '/src/ {print $NF}')
+fleet_metadata=$(cat /proc/1/environ  | tr '\0' '\n' | grep fleet_metadata | cut -d= -f 2- )
+ETCD_DISCOVERY=$(cat /proc/1/environ  | tr '\0' '\n' | grep ETCD_DISCOVERY | cut -d= -f 2- )
+
+echo "local ip address: $ipaddr"
+
+cat > /etc/fleet-cluster-env <<EOF
+ETCD_ADVERTISE_CLIENT_URLS=http://${ipaddr}:2379
+ETCD_DISCOVERY=${ETCD_DISCOVERY}
+ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${ipaddr}:2380
+ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001
+ETCD_LISTEN_PEER_URLS=http://${ipaddr}:2380,http://${ipaddr}:7001
+FLEET_ETCD_SERVERS=http://${ipaddr}:2379
+FLEET_METADATA=${fleet_metadata}
+EOF
+
+cat > /etc/environment <<EOF
+COREOS_PRIVATE_IPV4=${ipaddr}
+EOF
+
+rm /etc/nologin || true
+rm /var/run/nologin || true

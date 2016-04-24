@@ -1,0 +1,16 @@
+[Unit]
+Description=fleet
+Wants=etcd2.service
+After=etcd2.service
+Wants=fleet.socket
+After=fleet.socket
+
+
+[Service]
+EnvironmentFile=/etc/fleet-cluster-env
+ExecStart=/usr/bin/fleetd
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

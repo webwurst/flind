@@ -8,7 +8,8 @@ services:
 # --security-opt seccomp:/path/to/systemd-seccomp.json
 
   fleet:
-    build: .
+    build:
+      context: fleet
     cap_add:
       - SYS_ADMIN
     privileged: true
@@ -22,25 +23,18 @@ services:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ~/.ssh/id_rsa.pub:/home/core/.ssh/authorized_keys
-      - ./testing:/testing
-      # - test_overlay:/var/lib/docker
+      - ./examples:/examples
       - /var/lib/docker
-      # - ./daemon.json:/etc/docker/daemon.json
-    # depends-on:
+    # depends-on: registry-proxy ?
 
   # https://docs.docker.com/registry/deploying/#managing-with-compose
   registry-proxy:
-    # image: registry:2.2.1
     image: registry:2.4
-    ports:
-      - "5000"
+    # ports:
+    #   - "5000"
     volumes:
       - ./registry-proxy/config.yml:/etc/docker/registry/config.yml
       - registry-proxy-data:/var/lib/registry
 
-  # fleet2:
-  #   build: .
-
 volumes:
-  # test_overlay:
   registry-proxy-data:
